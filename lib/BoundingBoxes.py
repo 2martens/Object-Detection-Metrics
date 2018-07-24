@@ -1,97 +1,100 @@
-from BoundingBox import *
-from utils import *
+from typing import List
+
+from .BoundingBox import BoundingBox
+from .utils import BBType, add_bb_into_image
+
 
 class BoundingBoxes:
-
-    def __init__(self):
+    
+    def __init__(self) -> None:
         self._boundingBoxes = []
-
-    def addBoundingBox(self, bb):
+    
+    def addBoundingBox(self, bb: BoundingBox) -> None:
         self._boundingBoxes.append(bb)
-
-    def removeBoundingBox(self, _boundingBox):
+    
+    def removeBoundingBox(self, _boundingBox: BoundingBox) -> None:
         for d in self._boundingBoxes:
-            if BoundingBox.compare(d,_boundingBox):
+            if BoundingBox.compare(d, _boundingBox):
                 del self._boundingBoxes[d]
                 return
     
-    def removeAllBoundingBoxes(self):
+    def removeAllBoundingBoxes(self) -> None:
         self._boundingBoxes = []
     
-    def getBoundingBoxes(self):
+    def getBoundingBoxes(self) -> List[BoundingBox]:
         return self._boundingBoxes
-
-    def getBoundingBoxByClass(self, classId):
+    
+    def getBoundingBoxByClass(self, classId: str) -> List[BoundingBox]:
         boundingBoxes = []
         for d in self._boundingBoxes:
-            if d.getClassId() == classId: # get only specified bounding box type
+            if d.getClassId() == classId:  # get only specified bounding box type
                 boundingBoxes.append(d)
         return boundingBoxes
-
-    def getClasses(self):
+    
+    def getClasses(self) -> List[str]:
         classes = []
         for d in self._boundingBoxes:
             c = d.getClassId()
             if c not in classes:
                 classes.append(c)
         return classes
-
-    def getBoundingBoxesByType(self, bbType):
+    
+    def getBoundingBoxesByType(self, bbType: BBType) -> List[BoundingBox]:
         # get only specified bb type
-        return [d for d in self._boundingBoxes if d.getBBType() == bbType] 
-
-    def getBoundingBoxesByImageName(self, imageName):
+        return [d for d in self._boundingBoxes if d.getBBType() == bbType]
+    
+    def getBoundingBoxesByImageName(self, imageName: str) -> List[BoundingBox]:
         # get only specified bb type
-        return [d for d in self._boundingBoxes if d.getImageName() == imageName] 
-
-    def count(self, bbType=None):
-        if bbType == None: # Return all bounding boxes
+        return [d for d in self._boundingBoxes if d.getImageName() == imageName]
+    
+    def count(self, bbType: BBType = None) -> int:
+        if bbType is None:  # Return all bounding boxes
             return len(self._boundingBoxes)
         count = 0
         for d in self._boundingBoxes:
-            if d.getBBType() == bbType: # get only specified bb type
+            if d.getBBType() == bbType:  # get only specified bb type
                 count += 1
         return count
     
-    def clone(self):
+    def clone(self) -> 'BoundingBoxes':
         newBoundingBoxes = BoundingBoxes()
         for d in self._boundingBoxes:
             det = BoundingBox.clone(d)
             newBoundingBoxes.addBoundingBox(det)
         return newBoundingBoxes
-
-    def drawAllBoundingBoxes(self, image, imageName):
+    
+    def drawAllBoundingBoxes(self, image, imageName: str):
         bbxes = self.getBoundingBoxesByImageName(imageName)
         for bb in bbxes:
-            if bb.getBBType() == BBType.GroundTruth: #if ground truth
-                image = add_bb_into_image(image, bb ,color=(0,255,0)) #green
-            else: #if detection
-                image = add_bb_into_image(image, bb ,color=(255,0,0)) #red
-        return image   
-
+            if bb.getBBType() == BBType.GroundTruth:  # if ground truth
+                image = add_bb_into_image(image, bb, color=(0, 255, 0))  # green
+            else:  # if detection
+                image = add_bb_into_image(image, bb, color=(255, 0, 0))  # red
+        return image
+    
     # def drawAllBoundingBoxes(self, image):
     #     for gt in self.getBoundingBoxesByType(BBType.GroundTruth):
     #         image = add_bb_into_image(image, gt ,color=(0,255,0))
     #     for det in self.getBoundingBoxesByType(BBType.Detected):
     #         image = add_bb_into_image(image, det ,color=(255,0,0))
-    #     return image    
+    #     return image
 
 #     @staticmethod
 #     def evaluateDetections(gtDetection, evalDetection, minIoUTruePos=0.0):
 #         #####################################################################
 #         # Evaluate Intersection over Union (IoU):
 #         #
-#         # - Only detected objects that are overlapped with the same class 
+#         # - Only detected objects that are overlapped with the same class
 #         #       groundtruth objects will be taken into account (e.g. a "cat"
 #         #       can only be compared to another "cat").
 #         # - Among multiple detections for a unique groundtruth bounding box,
 #         #       only the one with the highest IoU will be taken into consid-
 #         #       eration.
 #         # - As the highest IoU is taken into consideration, the bounding box
-#         #       pair that is considered a match (one from groundtruth and the 
+#         #       pair that is considered a match (one from groundtruth and the
 #         #       other is the detected one), is removed. This way these bound-
-#         #       ing boxes won't be considered in further checking for this 
-#         #       image. Then only maximum IoU will be added to IoU_sum for 
+#         #       ing boxes won't be considered in further checking for this
+#         #       image. Then only maximum IoU will be added to IoU_sum for
 #         #       the image.
 #         # - The IoU of an image pair is the average of its IoU.
 #         # - IoU of the image = IoU_sum / (True_positives + False_positives) which
@@ -103,8 +106,8 @@ class BoundingBoxes:
 #         # - If detected "cat" isn't overlaped with "cat" (or overlaped with "dog"),
 #         #       then this is false_positive and its IoU = 0
 #         # - All non-maximum IoUs = 0 and they are false_positives.
-#         # - If a detected "cat" is somehow overlapped with a "cat", then it is 
-#         #       accounted as a True Positive and no other detection will be 
+#         # - If a detected "cat" is somehow overlapped with a "cat", then it is
+#         #       accounted as a True Positive and no other detection will be
 #         #       considered for those bounding boxes.
 #         #####################################################################
 #         IoUs = []
@@ -159,20 +162,20 @@ class BoundingBoxes:
 #                         if iou > bestIoU:
 #                             bestGT = detGT
 #                             bestIoU = iou
-                        
+
 #                     IoUs.append(bestIoU)
 #                     # Increment False Positives or True Positives
 #                     if bestIoU == 0: # Detection makes no overlap with any object: it is a false positive
 #                         FP = FP + 1
-#                     elif (bestIoU >= minIoUTruePos): 
+#                     elif (bestIoU >= minIoUTruePos):
 #                         TP = TP + 1
 #                     else: #bestIoU < minIoUTruePos : The overlapped IOU is below the threshold
 #                         FP = FP + 1 # Detection is a false positive
 
-#                     # Now remove this detected BB and go to the next                
+#                     # Now remove this detected BB and go to the next
 #                     evalDetection.detections.remove(detEval)
 #                     continue
-            
+
 #                 FN = FN + len(gtDetection.detections)
 #         # Return average IoU among all detected bounding boxes, True Positives and False Positives
 #         return FN, TP, FP
